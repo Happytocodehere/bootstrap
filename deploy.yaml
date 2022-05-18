@@ -1,0 +1,93 @@
+##Beta
+- name: Code_Promotion beta
+  hosts: windows_beta
+  tasks:
+
+     - name: Stop Service
+       win_service :
+               name: bootstrap-ui
+               state: stopped
+       tags: beta
+
+     - name: Removing the old dist folder
+       win_file:
+         path: C:\bootstrap\\dist_old
+         state: absent
+       ignore_errors: yes
+       tags: beta
+
+     - name: Rename the current dist folder to dist_old
+       win_copy:
+         src: C:\bootstrap\\dist
+         dest: C:\bootstrap\\dist_old
+         remote_src: True 
+       ignore_errors: yes
+       tags: beta
+
+     - name: Removing the current dist folder
+       win_file:
+         path: C:\bootstrap\\dist
+         state: absent
+       ignore_errors: yes
+       tags: beta
+
+     - name: copy dist folder
+       win_copy:
+          src: /var/lib/jenkins/workspace/bootstrap/dist
+          dest: C:\bootstrap\\
+       tags: beta
+
+
+     - name: Backend start
+       win_service :
+               name: bootstrap-ui
+               state: started
+       tags: beta
+       
+       
+##release       
+- name: Code_Promotion uat
+  hosts: uat_ui
+  tasks:
+     - name: Removing the old dist folder
+       win_file:
+         path: C:\bootstrap\\dist_old
+         state: absent
+       tags: release
+       ignore_errors: yes
+
+     - name: Rename the current dist folder to dist_old
+       win_copy:
+         src: C:\bootstrap\\dist
+         dest: C:\bootstrap\\dist_old
+         remote_src: True 
+       tags: release
+       ignore_errors: yes
+
+     - name: Removing the current dist folder
+       win_file:
+         path: C:\bootstrap\\dist
+         state: absent
+       tags: release
+       ignore_errors: yes
+
+     - name: copy dist folder
+       win_copy:
+          src: /var/lib/jenkins/workspace/release/bootstrap/dist
+          dest: C:\bootstrap
+       tags: release
+
+
+       tags: release
+
+     - name: Stop Service
+       win_service :
+               name: bootstrap-ui
+               state: stopped
+       tags: release
+ 
+     - name: Backend start
+       win_service :
+               name: bootstrap-ui
+               state: started
+       tags: release

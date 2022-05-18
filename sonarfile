@@ -1,0 +1,57 @@
+// Pushed By -   Adarsh
+pipeline {
+
+   agent any
+   stages {
+    stage('Beta Build') {
+
+        steps {
+
+            // Get service code from a GitHub repository
+            sh "rm -rf *"
+            git credentialsId: '38473-094R9R-CREDENTIAL-387934', url: "git@github.com:Happytocodehere/${env.JOB_BASE_NAME}.git", branch: 'beta'
+	        sh "npm install"
+	        sh "ng build --output-hashing=all"
+            
+           
+        }
+        post {
+
+          failure {
+                /* Use slackNotifier.groovy from shared library and provide current build result as parameter */
+            slackSend channel: 'devops-team',
+                          message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+
+            }
+                }
+    }
+    stage('SonarQube analysis') {
+         		steps {
+         		   script {
+         			def scannerHome = tool 'sonar_scanner';
+         			withSonarQubeEnv(SONAR_AUTH_TOKEN: '84R8R8AUTHE9879749', installationName: 'sonarqube-9.2.4.8754') {
+         			sh "${tool("sonar_scanner")}/bin/sonar-scanner \
+         			-Dsonar.host.url=http://127.0.0.1:9000 \
+         			-Dsonar.projectKey=${env.JOB_BASE_NAME}-dev \
+         			-Dsonar.language=ts,js \
+         			-Dsonar.sourceEncoding=UTF-8 \
+         			-Dsonar.sources=/var/lib/jenkins/workspace/${env.JOB_NAME}/src"
+         		  
+                }
+         	}
+	}
+	             post {
+
+            
+        success {
+                 /* Use slackNotifier.groovy from shared library and provide current build result as parameter */
+             slackSend channel: 'devops-team',
+                          message: "Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} : ${currentBuild.currentResult} \n More info at: ${env.BUILD_URL} \n Please contact admin@mail.com for assistance. \n http://127.0.0.1:9000/project/issues?id=${env.JOB_BASE_NAME}-beta&resolved=false"
+
+
+        }
+
+	}
+	}
+}
+}
